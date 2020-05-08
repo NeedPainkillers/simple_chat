@@ -35,9 +35,32 @@ pub fn build_ui(application: &gtk::Application) {
     message_entry.connect_changed(clone!(@strong message, @weak message_entry => move |_|
         {
             message.borrow_mut().body = message_entry.get_text().expect("Couldn't get text from message entry").to_string();
+            message_entry.set_text("");
         }));
 
     let mut current_connection = Rc::new(RefCell::new(Connection::new())); // Would change by swapping tabs with connection
+    let open_chat: gtk::Button = builder.get_object("open_chat").expect("Couldn't get open_chat button");
+    let create_connection: gtk::Button = builder.get_object("create_connection").expect("Couldn't get create_connection button");
+    let ip_entry: gtk::Entry = builder.get_object("ip_entry").expect("Couldn't get ip_entry");
+    let port_entry: gtk::Entry = builder.get_object("port_entry").expect("Couldn't get port_entry");
+
+    create_connection.connect_clicked(clone!(@strong current_connection, @weak window, @weak ip_entry, @weak port_entry => move |_|
+        {
+            let ip = ip_entry.get_text().expect("Couldn't get text from ip entry").to_string();
+            let port = port_entry.get_text().expect("Couldn't get text from port entry").to_string();
+            ip_entry.set_text("");
+            port_entry.set_text("");
+            // TODO: create connection and store in button action under new chat button
+        }));
+
+    open_chat.connect_clicked(clone!(@strong current_connection, @weak window, @strong builder => move |_|
+        {
+            let dialog: gtk::Dialog = builder.get_object("dialog1").expect("Couldn't get dialog");
+            dialog.run();
+            dialog.hide();
+            window.show_all();
+        }));
+
     let send_button: gtk::Button = builder.get_object("send_button").expect("Couldn't get send button");
     let message_box: gtk::Box = builder.get_object("box3").expect("Couldn't get message box");
 

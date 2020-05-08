@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../chat\examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../chat\tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../chat\benches" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/../chat\target" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
