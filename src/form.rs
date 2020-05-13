@@ -27,7 +27,7 @@ use crate::model::message::Message;
 use crate::model::connection::Connection;
 use crate::model::settings::Settings;
 //, tx : Sender<String>
-fn create_message_widget(msg: Message) -> gtk::TextView
+fn create_message_widget(message: Message) -> gtk::TextView
 {
     let textview = gtk::TextView::new();
     // view settings
@@ -37,7 +37,23 @@ fn create_message_widget(msg: Message) -> gtk::TextView
     textview.set_editable(false);
     // Format output here
     let textbuffer = textview.get_buffer().unwrap();
-    textbuffer.set_text(format!("{0}\n{1}\n{2}\n", msg.datetime, msg.name, msg.body).as_str());
+    textbuffer.set_text(format!("{0}\n{1}\n{2}\n", message.datetime, message.name, message.body).as_str());
+    return textview;
+}
+fn create_message_widget_from_ref(message: Rc<RefCell<Message>>) -> gtk::TextView
+{
+    let textview = gtk::TextView::new();
+    // view settings
+    textview.set_wrap_mode(gtk::WrapMode::Word);
+    textview.set_justification(gtk::Justification::Right);
+    textview.set_indent(2);
+    textview.set_editable(false);
+
+    let textbuffer = textview.get_buffer().unwrap();
+    textbuffer.set_text(format!("{0}\n{1}\n{2}\n",
+                                message.as_ref().borrow().borrow().datetime,
+                                message.as_ref().borrow().borrow().name,
+                                message.as_ref().borrow().borrow().body).as_str());
     return textview;
 }
 
@@ -134,15 +150,25 @@ pub fn build_ui(application: &gtk::Application)
     let ip_entry: gtk::Entry = builder.get_object("ip_entry").expect("Couldn't get ip_entry");
     let port_entry: gtk::Entry = builder.get_object("port_entry").expect("Couldn't get port_entry");
 
-    create_connection.connect_clicked(clone!(@strong current_connection, @weak window, @weak ip_entry, @weak port_entry => move |_|
+    create_connection.connect_clicked(clone!(@strong current_connection, @weak window, @weak ip_entry, @weak port_entry, @weak builder => move |_|
         {
-            let ip = ip_entry.get_text().expect("Couldn't get text from ip entry").to_string();
-            let port = port_entry.get_text().expect("Couldn't get text from port entry").to_string();
+            let ip = Rc::new(ip_entry.get_text().expect("Couldn't get text from ip entry").to_string());
+            let port = Rc::new(port_entry.get_text().expect("Couldn't get text from port entry").to_string());
             ip_entry.set_text("");
             port_entry.set_text("");
             // TODO: create connection and store in button action under new chat button
-            current_connection.borrow_mut().ip = ip.clone();
-            current_connection.borrow_mut().port = port.clone();
+
+            let connection_box: gtk::Box = builder.get_object("box1").expect("Couldn't get box1");
+            let button = gtk::Button::new();
+            button.set_label(format!("{}:{}", ip.clone(), port.clone()).as_str());
+            button.connect_clicked(clone!(@strong ip, @strong port, @strong current_connection => move |_| {
+                current_connection.borrow_mut().ip = (*ip).clone();
+                current_connection.borrow_mut().port = (*port).clone();
+            }));
+            connection_box.pack_start(&button, false, false, 0u32);
+
+            current_connection.borrow_mut().ip = (*ip).clone();
+            current_connection.borrow_mut().port = (*port).clone();
         }));
 
     open_chat.connect_clicked(clone!(@strong current_connection, @weak window, @strong builder => move |_|
@@ -178,15 +204,7 @@ pub fn build_ui(application: &gtk::Application)
                 }
             }
 
-            let textview = gtk::TextView::new();
-            // view settings
-            textview.set_wrap_mode(gtk::WrapMode::Word);
-            textview.set_justification(gtk::Justification::Right);
-            textview.set_indent(2);
-
-            let textbuffer = textview.get_buffer().unwrap();
-            textbuffer.set_text(format!("{0}\n{1}\n{2}\n", message.as_ref().borrow().borrow().datetime,
-            message.as_ref().borrow().borrow().name, message.as_ref().borrow().borrow().body).as_str());
+            let textview = create_message_widget_from_ref(message.clone());
             // TODO: write to db here
 
             message_box.pack_start(&textview, false, false, 0u32);
