@@ -2,7 +2,8 @@
 #[derive(Clone)]
 pub struct Connection
 {
-    pub ip: String
+    pub ip: String,
+    pub port: String
 }
 
 impl Connection
@@ -11,7 +12,8 @@ impl Connection
     {
         Connection
             {
-                ip: String::new()
+                ip: String::new(),
+                port: String::new()
             }
     }
 }

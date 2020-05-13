@@ -1,6 +1,7 @@
 use chrono::{DateTime, TimeZone, NaiveDateTime, Local};
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Message
 {
     pub id: String,    //ip address of connection

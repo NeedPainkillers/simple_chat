@@ -8,6 +8,12 @@ extern crate gio;
 extern crate glib;
 extern crate gtk;
 
+use std::thread;
+use std::sync::mpsc;
+use std::net::{TcpListener, TcpStream, Shutdown};
+use std::io::{Read, Write};
+use std::str::from_utf8;
+
 use gio::prelude::*;
 use std::env::args;
 

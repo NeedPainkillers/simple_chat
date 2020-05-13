@@ -98,10 +98,105 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-ok</property>
   </object>
-  <object class="GtkTextBuffer" id="textbuffer1">
-    <property name="text">22:10:15 14/12/2020
-John Smith:
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</property>
+  <object class="GtkDialog" id="settings_dialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="type_hint">dialog</property>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="dialog-vbox4">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkEntry" id="set_name_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+            <property name="text" translatable="yes">John</property>
+            <property name="invisible_char_set">True</property>
+            <property name="placeholder_text">name</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="dialog-action_area4">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButton" id="cancel_settings">
+                <property name="label" translatable="yes">Close</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="set_port_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+            <property name="text" translatable="yes">27015</property>
+            <property name="placeholder_text">listener port</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="set_database_ip">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+            <property name="invisible_char_set">True</property>
+            <property name="placeholder_text">database ip address</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="set_conn_str">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+            <property name="invisible_char_set">True</property>
+            <property name="placeholder_text">connection string</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="0">cancel_settings</action-widget>
+    </action-widgets>
   </object>
   <object class="GtkWindow" id="window1">
     <property name="width_request">500</property>
@@ -137,7 +232,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
                             <property name="can_focus">False</property>
                             <property name="hexpand">True</property>
                             <child>
-                              <object class="GtkToolButton" id="settings_button">
+                              <object class="GtkToolButton" id="settings_button1">
                                 <property name="use_action_appearance">False</property>
                                 <property name="related_action">app.settings</property>
                                 <property name="visible">True</property>
@@ -148,19 +243,6 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
                               </object>
                               <packing>
                                 <property name="expand">False</property>
-                                <property name="homogeneous">True</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkToolButton" id="messages">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Messages</property>
-                                <property name="use_underline">True</property>
-                                <property name="stock_id">gtk-home</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
                                 <property name="homogeneous">True</property>
                               </packing>
                             </child>
@@ -228,34 +310,10 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
                             <property name="can_focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkTextView" id="textview1">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="pixels_below_lines">4</property>
-                                <property name="editable">False</property>
-                                <property name="wrap_mode">word</property>
-                                <property name="buffer">textbuffer1</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
-                              <object class="GtkTextView" id="textview2">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="editable">False</property>
-                                <property name="wrap_mode">word</property>
-                                <property name="justification">right</property>
-                                <property name="buffer">textbuffer1</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                           </object>
                         </child>
