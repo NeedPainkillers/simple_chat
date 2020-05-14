@@ -7,6 +7,7 @@
 extern crate gio;
 extern crate glib;
 extern crate gtk;
+extern crate redis;
 
 use std::thread;
 use std::sync::mpsc;

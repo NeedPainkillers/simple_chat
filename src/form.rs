@@ -3,6 +3,7 @@
 extern crate gio;
 extern crate glib;
 extern crate gtk;
+extern crate redis;
 
 use serde::{Serialize, Deserialize};
 
@@ -26,7 +27,9 @@ use std::borrow::Borrow;
 use crate::model::message::Message;
 use crate::model::connection::Connection;
 use crate::model::settings::Settings;
-//, tx : Sender<String>
+use crate::libs::redisrw::redis_connection;
+
+
 fn create_message_widget(message: Message) -> gtk::TextView
 {
     let textview = gtk::TextView::new();
@@ -82,8 +85,8 @@ pub fn build_ui(application: &gtk::Application)
         {
             name: String::from("John"),
             port: String::from("27015"),
-            connection_string: String::from("TBD"),
-            db_ip: String::from("TBD")
+            connection_string: String::from("host.docker.internal"),
+            db_ip: String::from("host.docker.internal")
         }));
 
     let mut current_connection = Rc::new(RefCell::new(Connection
@@ -107,6 +110,7 @@ pub fn build_ui(application: &gtk::Application)
     let set_name_entry: gtk::Entry = builder.get_object("set_name_entry").expect("Couldn't get set_name_entry");
     let set_port_entry: gtk::Entry = builder.get_object("set_port_entry").expect("Couldn't get set_port_entry");
     let set_database_ip: gtk::Entry = builder.get_object("set_database_ip").expect("Couldn't get set_database_ip");
+    set_database_ip.set_text("host.docker.internal");
     let set_conn_str: gtk::Entry = builder.get_object("set_conn_str").expect("Couldn't get set_conn_str");
 
     set_name_entry.connect_changed(clone!(@strong settings, @weak set_name_entry, @weak message => move |_|
@@ -128,16 +132,21 @@ pub fn build_ui(application: &gtk::Application)
         }));
 
     let set_dialog: gtk::Dialog = builder.get_object("settings_dialog").expect("Couldn't get settings dialog");
+
+    set_conn_str.set_visible(false);
     set_dialog.run();
     set_dialog.hide();
-    // TODO: init settings
+    set_port_entry.set_visible(false);
+    set_database_ip.set_visible(false);
+
+    // init settings
     println!("{}", settings.as_ref().borrow().borrow().port.clone());
     let listener = TcpListener::bind(format!("0.0.0.0:{}", settings.as_ref().borrow().borrow().port)).unwrap();
+    let redis = redis_connection::new(settings.as_ref().borrow().borrow().db_ip.clone());
+    let redis_clone = redis.clone();
     message.borrow_mut().name = settings.as_ref().borrow().borrow().name.clone();
-    let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
-    // this item used to storage message fields in order to send it
-    // TODO: set message field name to name from settings
+    let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
     let message_entry: Entry = builder.get_object("message_entry").expect("Couldn't get message entry field");
     message_entry.connect_changed(clone!(@strong message, @weak message_entry => move |_|
@@ -186,32 +195,37 @@ pub fn build_ui(application: &gtk::Application)
         {
             let ip = current_connection.as_ref().borrow().borrow().ip.clone();
             let port = current_connection.as_ref().borrow().borrow().port.clone();
-            let message_clone = message.as_ref().borrow().borrow().clone();
+            let date = message.as_ref().borrow().borrow().clone().datetime.timestamp().clone();
             message.borrow_mut().update_time();
-            // TODO: send message
-            match TcpStream::connect(format!("{0}:{1}", ip, port)) {
-                Ok(mut stream) => {
-                    println!("Successfully connected to server");
+            message.borrow_mut().id = date.clone().to_string();
+            // send message
+            let msg = serde_json::to_string(message.as_ref()).unwrap();
+            let msg_clone = msg.clone();
 
-                    let msg = serde_json::to_string(message.as_ref()).unwrap();
+            // write to db
+            redis.write(format!("{}:{};{}", ip.clone(), port.clone(), date), msg_clone).unwrap();
 
-                    stream.write(msg.as_str().as_bytes()).unwrap();
-                    println!("{}", msg);
-                    println!("Sent message");
-                },
-                Err(e) => {
-                    println!("Failed to connect: {}", e);
-                }
-            }
+            let tcp_thread_send = thread::spawn(move||{
+                match TcpStream::connect(format!("{0}:{1}", ip, port)) {
+                    Ok(mut stream) => {
+                        println!("Successfully connected to server");
+
+                        stream.write(msg.as_str().as_bytes()).unwrap();
+                        println!("{}", msg);
+                        println!("Sent message");
+                    },
+                    Err(e) => {
+                        println!("Failed to connect: {}", e);
+                    }
+            }});
 
             let textview = create_message_widget_from_ref(message.clone());
-            // TODO: write to db here
+
 
             message_box.pack_start(&textview, false, false, 0u32);
             message_entry.set_text("");
             window.show_all();
         }));
-    // TODO: New chat dialog box
 
     window.show_all();
 
@@ -225,7 +239,11 @@ pub fn build_ui(application: &gtk::Application)
             match stream {
                 Ok(stream) => {
                     println!("New connection: {}", stream.peer_addr().unwrap().clone());
+                    let ip = stream.peer_addr().unwrap().clone();
                     let mut msg = handle_stream(stream);
+                    let msg_json = serde_json::to_string(&msg.clone()).unwrap();;
+                    let date = msg.clone().datetime.timestamp().clone().to_string();
+                    redis_clone.write(format!("{};{}", ip, date), msg_json).unwrap();
                     let _ = sender.send(MessageReceived::CreateMessage(msg));
                 }
                 Err(e) => {
